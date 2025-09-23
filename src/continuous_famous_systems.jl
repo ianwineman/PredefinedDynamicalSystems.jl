@@ -2157,7 +2157,7 @@ given by
 The parameter container has the parameters in the same order as stated in this
 function's documentation string. Default values are:
 ```julia
-A = 2.0551, B = −2.6, C = 0.4, D = 1.0, E = 0.4
+A = 2.06, B = −2.6, C = 0.4, D = 1.0, E = 0.4
 ```
 
 [^Zeng2024]:
@@ -2165,7 +2165,7 @@ A = 2.0551, B = −2.6, C = 0.4, D = 1.0, E = 0.4
     Multistable states in a predator–prey model with generalized Holling type III functional response and a strong Allee effect.
     Communications in Nonlinear Science and Numerical Simulation, Volume 131, 107846
 """
-function tristable_predator_prey(u0 = [0.5, 0.5]; A = 2.0551, B = −2.6, C = 0.4, D = 1.0, E = 0.4)
+function tristable_predator_prey(u0 = [0.5, 0.5]; A = 2.06, B = −2.6, C = 0.4, D = 1.0, E = 0.4)
     function zeng_yu_2024(u, p, t)
         A, B, C, D, E = p
         x, y = u
