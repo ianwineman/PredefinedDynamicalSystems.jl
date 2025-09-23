@@ -2138,3 +2138,44 @@ end
     du4 = -d*x - d*y
     return SVector{4}(du1, du2, du3, du4)
 end
+
+
+"""
+    tristable_predator_prey(u0; A, B, C, D, E)
+
+A tristable predator prey model studied by Zeng and Yu[^Zeng2024],
+given by
+
+```math
+\\begin{array}{rcl}
+    \\dot{x} & = & x(1-x)(x - E) - s y \\\\
+    \\dot{y} &=& y(sC - D) \\\\
+    \\mbox{where\\quad} s & = & x^2/(Ax^2 + Bx + 1)
+\\end{array}
+```
+
+The parameter container has the parameters in the same order as stated in this
+function's documentation string. Default values are:
+```julia
+A = 2.0551, B = −2.6, C = 0.4, D = 1.0, E = 0.4
+```
+
+[^Zeng2024]:
+    Yanni Zeng, Pei Yu (2024)
+    Multistable states in a predator–prey model with generalized Holling type III functional response and a strong Allee effect.
+    Communications in Nonlinear Science and Numerical Simulation, Volume 131, 107846
+"""
+function tristable_predator_prey(u0 = [0.5, 0.5]; A = 2.0551, B = −2.6, C = 0.4, D = 1.0, E = 0.4)
+    function zeng_yu_2024(u, p, t)
+        A, B, C, D, E = p
+        x, y = u
+        common = x^2/(A*x^2 + B*x + 1)
+        dx = x*(1 - x)*(x - E) - common*y
+        dy = y*(C*common - D)
+        return SVector(dx, dy)
+    end
+    p = [A,B,C,D,E]
+    diffeq = (abstol = 1e-9, rtol = 1e-9)
+    ds = CoupledODEs(zeng_yu_2024, u0, p; diffeq)
+    return ds
+end
