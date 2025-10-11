@@ -95,8 +95,6 @@ function chua_element_derivative(x, m0, m1)
     return m1 + 0.5 * (m0 - m1) * (-1 < x < 1 ? 2 : 0)
 end
 
-
-
 """
 ```julia
 roessler(u0=[1, -2, 0.1]; a = 0.2, b = 0.2, c = 5.7)
@@ -2165,7 +2163,7 @@ A = 2.06, B = −2.6, C = 0.4, D = 1.0, E = 0.4
     Multistable states in a predator–prey model with generalized Holling type III functional response and a strong Allee effect.
     Communications in Nonlinear Science and Numerical Simulation, Volume 131, 107846
 """
-function tristable_predator_prey(u0 = [0.5, 0.5]; A = 2.06, B = −2.6, C = 0.4, D = 1.0, E = 0.4)
+function tristable_predator_prey(u0 = [0.5, 0.5]; A = 2.06, B = -2.6, C = 0.4, D = 1.0, E = 0.4)
     function zeng_yu_2024(u, p, t)
         A, B, C, D, E = p
         x, y = u
@@ -2178,4 +2176,52 @@ function tristable_predator_prey(u0 = [0.5, 0.5]; A = 2.06, B = −2.6, C = 0.4,
     diffeq = (abstol = 1e-9, rtol = 1e-9)
     ds = CoupledODEs(zeng_yu_2024, u0, p; diffeq)
     return ds
+end
+
+
+"""
+```julia
+daisyworld(u0 = [0.01, 0.01]; S = 1.0, A_b = 0.25, A_w = 0.75, A_g = 0.5, T_opt = 22.5, delta = 17.5, gamma = 0.3, q = 0.2, L = 1.0)
+```
+The continuous time Daisyworld model [^WatsonLovelock1983].
+The model describes the coupled evolution of black and white daisy populations,
+whose growth rates depend on local temperature, which is affected by planetary albedo.
+
+Variables 1,2 are white and black daisies respectively.
+
+Parameters:
+- `S`: Solar constant (relative luminosity)
+- `A_b`, `A_w`, `A_g`: Albedos of black, white daisies, and bare ground
+- `T_opt`: Optimal temperature for growth (°C)
+- `delta`: Width of growth temperature window
+- `gamma`: Death rate
+- `q`: Heat transport parameter
+- `L`: Luminosity (scaling factor)
+
+[^WatsonLovelock1983]:
+    Watson, A. J., & Lovelock, J. E. (1983).
+    Biological homeostasis of the global environment: the parable of Daisyworld.
+    Tellus B: Chemical and Physical Meteorology, 35(4), 284-289.
+"""
+function daisyworld(u0 = [0.01, 0.01]; S = 1.0, A_b = 0.25, A_w = 0.75, A_g = 0.5, T_opt = 22.5, delta = 17.5, gamma = 0.3, q = 0.2, L = 1.0)
+    p = [S, A_b, A_w, A_g, T_opt, delta, gamma, q, L]
+    return CoupledODEs(daisyworld_rule, u0, p)
+end
+
+@inbounds function daisyworld_rule(u, p, t)
+    a_b, a_w = u[1], u[2]
+    S, A_b, A_w, A_g, T_opt, delta, gamma, q, L = p
+    a_g = 1.0 - a_b - a_w
+    # Planetary albedo
+    A = a_b * A_b + a_w * A_w + a_g * A_g
+    # Local temperatures (simplified, in °C)
+    T_b = q * S * L * (1 - A_b) - 273.15
+    T_w = q * S * L * (1 - A_w) - 273.15
+    # Growth rates (parabolic dependence)
+    beta_b = max(0.0, 1.0 - ((T_opt - T_b)/delta)^2)
+    beta_w = max(0.0, 1.0 - ((T_opt - T_w)/delta)^2)
+    # ODEs
+    da_b = a_b * (beta_b * a_g - gamma)
+    da_w = a_w * (beta_w * a_g - gamma)
+    return SVector{2}(da_b, da_w)
 end
